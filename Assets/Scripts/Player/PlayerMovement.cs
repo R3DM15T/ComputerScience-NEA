@@ -7,6 +7,7 @@ public class PlayerMovement : MonoBehaviour
     public static PlayerMovement instance;
     [SerializeField] float runSpeed = 10f;
     [SerializeField] float jumpSpeed = 5f;
+    [SerializeField] float bounceSpeed = 5f;
     [SerializeField] bool canDoubleJump = false;
     [SerializeField] bool hasJumped = false;
     [SerializeField] bool hasDoubleJumped = false;
@@ -54,6 +55,7 @@ public class PlayerMovement : MonoBehaviour
         IsGrounded();
         PreventWallStick();
         Hazards();
+        Bounce();
 
 
         if (dashCounter > 0)
@@ -150,8 +152,16 @@ public class PlayerMovement : MonoBehaviour
     {
         if (feetCollider.IsTouchingLayers(LayerMask.GetMask("Hazards")))
         {
-            //take damage
+            Destroy(gameObject);
 
+        }
+    }
+
+    void Bounce()
+    {
+        if (feetCollider.IsTouchingLayers(LayerMask.GetMask("Jump")))
+        {
+            rigidBody.linearVelocity = new Vector2(rigidBody.linearVelocity.x, bounceSpeed);
         }
     }
 
