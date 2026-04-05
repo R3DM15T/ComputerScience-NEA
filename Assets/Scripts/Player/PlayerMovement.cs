@@ -26,6 +26,7 @@ public class PlayerMovement : MonoBehaviour
     CapsuleCollider2D bodyCollider;
     BoxCollider2D feetCollider;
     [SerializeField] GameObject doublejumpParticles;
+    [SerializeField] GameObject bounceParticles;
     [SerializeField] GameObject dashParticles;
     [SerializeField] GameObject feet;
     [SerializeField] GameObject dashParticlesArea;
@@ -93,7 +94,7 @@ public class PlayerMovement : MonoBehaviour
         if (context.started)
         {
             bool isFeetGrounded = IsGrounded();
-            if (isFeetGrounded)
+            if (isFeetGrounded)//feetCollider.IsTouchingLayers(LayerMask.GetMask("Platforms")))
             {
                 rigidBody.linearVelocity = new Vector2(rigidBody.linearVelocity.x, jumpSpeed);
                 hasJumped = true;
@@ -149,7 +150,7 @@ public class PlayerMovement : MonoBehaviour
     }
 
     void Hazards()
-    {
+    { 
         if (feetCollider.IsTouchingLayers(LayerMask.GetMask("Hazards")))
         {
             Destroy(gameObject);
@@ -162,6 +163,7 @@ public class PlayerMovement : MonoBehaviour
         if (feetCollider.IsTouchingLayers(LayerMask.GetMask("Jump")))
         {
             rigidBody.linearVelocity = new Vector2(rigidBody.linearVelocity.x, bounceSpeed);
+            Instantiate(bounceParticles, feet.transform.position, feet.transform.rotation);
         }
     }
 
