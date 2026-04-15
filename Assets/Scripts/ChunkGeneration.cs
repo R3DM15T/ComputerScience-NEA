@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Collections;
 
 public enum Direction
 {
@@ -12,6 +13,7 @@ public class ChunkGeneration : MonoBehaviour
 {
     [SerializeField] GameObject[] roomPrefabs;
     [SerializeField] GameObject startRoomPrefab;
+    [SerializeField] int spawnRoomDelay;
     [SerializeField] int numberOfRooms = 10;
     [SerializeField] float roomxSize = 20f;
     [SerializeField] float roomySize = 20f;
@@ -20,15 +22,24 @@ public class ChunkGeneration : MonoBehaviour
     private Queue<Vector2Int> roomQueue = new Queue<Vector2Int>();
     void Start()
     {
-        ChunkGenerate();
+        SpawnStartRoom();
     }
 
 
-    void ChunkGenerate()
+    void SpawnStartRoom()
     {
         Vector2Int startPosition = Vector2Int.zero;
         SpawnRoom(startPosition, startRoomPrefab);
         roomQueue.Enqueue(startPosition); //Add the start position to the queue
+
+        Debug.Log($" The start room spawned at {startPosition}");
+        StartCoroutine(GenerateChunk());
+
+
+    }
+
+    private IEnumerator GenerateChunk()
+    {
         while (roomQueue.Count > 0 && placedRooms.Count < numberOfRooms) //while there is rooms to be processed and the max rooms has not been reached
         {
             Vector2Int currentPosition = roomQueue.Dequeue(); //get the next room position
@@ -37,8 +48,10 @@ public class ChunkGeneration : MonoBehaviour
             foreach (Direction dir in currentRoom.availableDoors) //loop through each door direction in the room
             {
                 Vector2Int newPosition = currentPosition + DirectionToVector(dir);
-                if(placedRooms.ContainsKey(newPosition))//this is to skip if a room already exists at this position to prevent the rooms from overlapping
+                Debug.Log($"Spawning in room at {newPosition} with {currentRoom.availableDoors.Count} doors");
+                if (placedRooms.ContainsKey(newPosition))//this is to skip if a room already exists at this position to prevent the rooms from overlapping
                 {
+                    Debug.Log($"Position {newPosition} already has a room, skipping room");
                     continue;
                 }
 
@@ -47,7 +60,9 @@ public class ChunkGeneration : MonoBehaviour
                 SpawnRoom(newPosition, roomPrefab);
                 roomQueue.Enqueue(newPosition);
             }
+            yield return new WaitForSeconds(spawnRoomDelay); //spawn next rooms after set delay (needed for bug testing)
         }
+
     }
 
     void SpawnRoom(Vector2Int gridPosition, GameObject prefab)
