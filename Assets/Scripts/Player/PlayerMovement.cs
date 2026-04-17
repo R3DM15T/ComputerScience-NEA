@@ -5,31 +5,38 @@ using System.Collections;
 public class PlayerMovement : MonoBehaviour
 {
     public static PlayerMovement instance;
+
+    [Header("Movement Settings")]
+
+    [SerializeField] private float activeMoveSpeed;
     [SerializeField] float runSpeed = 10f;
     [SerializeField] float jumpSpeed = 5f;
     [SerializeField] float bounceSpeed = 5f;
     [SerializeField] bool canDoubleJump = false;
     [SerializeField] bool hasJumped = false;
     [SerializeField] bool hasDoubleJumped = false;
-    [SerializeField] float spikeDamage;
+    [SerializeField] public float dashSpeed = 8f, dashLength = .5f, dashCooldown = 1f;
+    [SerializeField] private float dashCounter, dashCoolCounter;
+    [SerializeField] private bool isDashingThroughObjects = false;
+
+    [Header("Particle/Colliders")]
+
+    [SerializeField] GameObject doublejumpParticles;
+    [SerializeField] GameObject bounceParticles;
+    [SerializeField] GameObject dashParticles;
+    [SerializeField] GameObject feet;
+    [SerializeField] GameObject dashParticlesArea;
     [SerializeField] private LayerMask passThroughLayers = LayerMask.GetMask();
 
-    private float activeMoveSpeed;
-    public float dashSpeed = 8f, dashLength = .5f, dashCooldown = 1f;
-    private float dashCounter, dashCoolCounter;
-    private bool isDashingThroughObjects = false;
+    [Header("References")]
 
     Vector2 moveInput;
     Rigidbody2D rigidBody;
     Animator animation;
     private Camera cam;
     CapsuleCollider2D bodyCollider;
+    Renderer rend;
     BoxCollider2D feetCollider;
-    [SerializeField] GameObject doublejumpParticles;
-    [SerializeField] GameObject bounceParticles;
-    [SerializeField] GameObject dashParticles;
-    [SerializeField] GameObject feet;
-    [SerializeField] GameObject dashParticlesArea;
 
     private void Awake()
     {
@@ -41,6 +48,7 @@ public class PlayerMovement : MonoBehaviour
         activeMoveSpeed = runSpeed;
         cam = Camera.main;
         rigidBody = GetComponent<Rigidbody2D>();
+        rend = GetComponent<Renderer>();
         rigidBody.freezeRotation = true;
         animation = GetComponent<Animator>();
         bodyCollider = GetComponent<CapsuleCollider2D>();
@@ -55,7 +63,6 @@ public class PlayerMovement : MonoBehaviour
         SpriteFlip();
         IsGrounded();
         PreventWallStick();
-        Hazards();
         Bounce();
 
 
@@ -118,8 +125,8 @@ public class PlayerMovement : MonoBehaviour
             mousePos.z = 0;
             Vector2 dashDirection = (mousePos - transform.position).normalized;
             Instantiate(dashParticles, dashParticlesArea.transform.position, dashParticlesArea.transform.rotation);
-            //give invinsibility when added health system
-            //turnTransparent(); will be visual feedback when i do it
+            HealthController.instance.GiveInv();
+            PlayerManager.instance.turnTransparent();
             EnableDashPassThrough();
             rigidBody.linearVelocity = dashDirection * dashSpeed; //apply force
 
@@ -145,15 +152,6 @@ public class PlayerMovement : MonoBehaviour
         if (playerHasHorizontalSpeed)
         {
             transform.localScale = new Vector2(1.8f * Mathf.Sign(rigidBody.linearVelocity.x), 1.8f);
-
-        }
-    }
-
-    void Hazards()
-    { 
-        if (feetCollider.IsTouchingLayers(LayerMask.GetMask("Hazards")))
-        {
-            Destroy(gameObject);
 
         }
     }
@@ -209,6 +207,5 @@ public class PlayerMovement : MonoBehaviour
             }
         }
     }
-
 }
 
