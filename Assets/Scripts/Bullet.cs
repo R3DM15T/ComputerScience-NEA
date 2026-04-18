@@ -31,6 +31,11 @@ public class Bullet : MonoBehaviour
             Instantiate(impactEffect, transform.position, transform.rotation);
             Destroy(gameObject);
         }
+        if(other.tag == "Enemy")
+        {
+            other.GetComponent<EnemyController>().DamageEnemy(1);
+            Destroy(gameObject);
+        }
     }
 
     private void OnBecameInvisible()

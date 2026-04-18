@@ -9,6 +9,12 @@ public enum EnemyStates
     Follow,
     Patrol
 }
+
+public enum EnemyTypes
+{
+    Fly,
+    Ground
+}
 public class EnemyAI : MonoBehaviour
 {
     [SerializeField] float detectRange = 5f;
@@ -18,9 +24,22 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] private LayerMask platformLayer;
     [SerializeField] private LayerMask obstacleLayer;
 
+    [SerializeField] GameObject bulletPrefab;
+    [SerializeField] Transform firePoint;
+    [SerializeField] float fireRate = 1f;
+
+    private float fireCooldown;
+
+    private Vector2Int currentTargetNode;
+    private bool hasTarget = false;
+
+    [SerializeField] float patrolDelay = 0.5f;
+    private bool WaitingForPatrol = false;
+
     private Vector3 lastPosition; 
     Rigidbody2D rigidBody;
     public EnemyStates currentState;
+    public EnemyTypes enemyType;
     public Transform player;
     public float distance;
     public List<Node> path;
@@ -31,6 +50,7 @@ public class EnemyAI : MonoBehaviour
     {
         GenerateGrid();
         rigidBody = GetComponent<Rigidbody2D>();
+
     }
 
     void FixedUpdate()
@@ -52,31 +72,112 @@ public class EnemyAI : MonoBehaviour
                 Vector2Int pos = new Vector2Int(x, y);
                 Vector3 worldPos = GridToWorld(pos);
                 bool blocked = Physics2D.OverlapCircle(worldPos, cellSize * 0.4f, platformLayer);
-                bool isWalkable = !blocked;
+                Vector3 ground = worldPos + Vector3.down * (cellSize * 0.6f);
+                bool groundBelow = Physics2D.OverlapCircle(ground, cellSize * 0.4f, platformLayer);
 
-                grid[pos] = new Node(pos, isWalkable);
+                if (enemyType == EnemyTypes.Fly)
+                {
+                    bool isWalkable = !blocked;
+                    grid[pos] = new Node(pos, isWalkable);
+                }
+                else
+                {
+                    bool isWalkable = !blocked && groundBelow;
+                    grid[pos] = new Node(pos, isWalkable);
+                }
             }
         }
     }
+
+
+
+
 
     void FiniteStates()
     {
         switch (currentState) //switch case statement for the different enemy states
         {
             case EnemyStates.Attack:
+                ShootPlayer();
                 if (distance > attackRange)
                     currentState = EnemyStates.Follow; //enemy follows player if distance is more than the attack range
                 break;
             case EnemyStates.Follow:
                 FollowPlayer(); //uses A* pathfinding to follow player
                 if (distance < attackRange)
-                    currentState = EnemyStates.Attack; //enemy attacks player if the distance is less than attack range
+                    currentState = EnemyStates.Attack;//enemy attacks player if the distance is less than attack range
+                else if (distance > detectRange)
+                {
+                    currentState = EnemyStates.Patrol;
+                }
                 break;
             case EnemyStates.Patrol:
+                Patrol();
                 if (distance < detectRange)
                     currentState = EnemyStates.Follow; //enemy follows player is distance is less than the detection range
                 break;
         }
+    }
+
+    void ShootPlayer()
+    {
+        fireCooldown -= Time.deltaTime;
+        if (fireCooldown <= 0f)
+        {
+            GameObject enemybullet = Instantiate(bulletPrefab, firePoint.position, Quaternion.identity);
+            fireCooldown = fireRate;
+        }
+    }
+
+    IEnumerator PatrolDelay()
+    {
+
+        yield return new WaitForSeconds(patrolDelay);
+    }
+
+    void Patrol()
+    {
+        StartCoroutine(PatrolDelay());
+
+        Vector2Int currentNode = WorldToGrid(transform.position);
+
+        // pick target
+        if (!hasTarget)
+        {
+            List<Node> neighbours = GetNeighbours(grid[currentNode]);
+
+            List<Node> validNodes = new List<Node>();
+
+            foreach (Node node in neighbours)
+            {
+                if (node.isWalkable)
+                    validNodes.Add(node);
+            }
+
+            if (validNodes.Count > 0)
+            {
+                int random = UnityEngine.Random.Range(0, validNodes.Count);
+                currentTargetNode = validNodes[random].gridPos;
+                hasTarget = true;
+            }
+        }
+
+        // moving to the target node
+        Vector3 targetPos = GridToWorld(currentTargetNode);
+
+        transform.position = Vector2.MoveTowards(
+            transform.position,
+            targetPos,
+            speed * Time.deltaTime
+        );
+
+        //reached the target, picking a new one
+        if (Vector2.Distance(transform.position, targetPos) < 0.1f)
+        {
+            hasTarget = false;
+        }
+        
+
     }
 
 
@@ -93,7 +194,9 @@ public class EnemyAI : MonoBehaviour
             transform.position = Vector2.MoveTowards(transform.position, nextPos, speed * Time.deltaTime);
             transform.localScale = new Vector2(1f * Mathf.Sign(rigidBody.linearVelocity.x), 1f);
         }
+
     }
+
 
     public List<Node> PathFind(Vector2Int start, Vector2Int end)
     {
@@ -125,7 +228,7 @@ public class EnemyAI : MonoBehaviour
                 return RetracePath(startNode, endNode);
             }
 
-            foreach (Node neighbour in GetNeighbours(currentNode))
+            foreach (Node neighbour in GetNeighbours(currentNode)) //checks all neighbouring nodes
             {
 
                 if (!neighbour.isWalkable || closeSet.Contains(neighbour))

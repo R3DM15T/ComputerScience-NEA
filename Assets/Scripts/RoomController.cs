@@ -6,16 +6,18 @@ public class RoomController : MonoBehaviour
     public bool doorClose;
     public GameObject doors;
     public List<Direction> availableDoors;
-
+    public List<GameObject> enemies = new List<GameObject>();
+    public bool roomActive;
+    public bool closeDoorOnWhenEntered, openDoorOnEnemiesCleared;
 
     void Start()
     {
         
     }
 
-    void Update()
+    void FixedUpdate()
     {
-        
+        EnemyCheck();
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -23,25 +25,33 @@ public class RoomController : MonoBehaviour
         if(other.tag == "Player")
         {
             CameraController.instance.ChangeTarget(transform);
-
-            if (doorClose)
+            if (closeDoorOnWhenEntered)
             {
-                StartCoroutine(closeDelay());
-                StartCoroutine(openDoor());
+                doors.SetActive(true);
             }
+
         }
 
     }
-    
-    public IEnumerator closeDelay()
+
+    public void EnemyCheck()
     {
-        yield return new WaitForSeconds(1);
-        doors.SetActive(true);
+        if (enemies.Count > 0 && openDoorOnEnemiesCleared)
+        {
+            for (int i = 0; i < enemies.Count; i++)
+            {
+                if (enemies[i] == null)
+                {
+                    enemies.RemoveAt(i);
+                    i--;
+                }
+            }
+            if (enemies.Count == 0)
+            {
+                doors.SetActive(false);
+                closeDoorOnWhenEntered = false;
+            }
+        }
     }
 
-    public IEnumerator openDoor()
-    {
-        yield return new WaitForSeconds(5);
-        doors.SetActive(false);
-    }
 }
