@@ -5,6 +5,7 @@ public class RoomController : MonoBehaviour
 {
     public bool doorClose;
     public GameObject doors;
+    public GameObject roomMapLayout;
     public List<Direction> availableDoors;
     public List<GameObject> enemies = new List<GameObject>();
     public bool roomActive;
@@ -28,6 +29,7 @@ public class RoomController : MonoBehaviour
             if (closeDoorOnWhenEntered)
             {
                 doors.SetActive(true);
+                roomMapLayout.SetActive(true);
             }
 
         }

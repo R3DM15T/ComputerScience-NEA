@@ -45,20 +45,52 @@ public class ChunkGeneration : MonoBehaviour
             Vector2Int currentPosition = roomQueue.Dequeue(); //get the next room position
             RoomController currentRoom = placedRooms[currentPosition];//get room at that set position
 
-            foreach (Direction dir in currentRoom.availableDoors) //loop through each door direction in the room
+            int remainingRooms = numberOfRooms - placedRooms.Count;//find remaning amount of rooms to spawn in 
+
+            List<Direction> availableDirections = new List<Direction>(currentRoom.availableDoors);
+            RandomiseList(availableDirections);
+            int activeBranches = roomQueue.Count;
+
+            foreach (Direction dir in availableDirections) //loop through each door direction in the room
             {
                 Vector2Int newPosition = currentPosition + DirectionToVector(dir);
                 Debug.Log($"Spawning in room at {newPosition} with {currentRoom.availableDoors.Count} doors");
+
                 if (placedRooms.ContainsKey(newPosition))//this is to skip if a room already exists at this position to prevent the rooms from overlapping
                 {
                     Debug.Log($"Position {newPosition} already has a room, skipping room");
                     continue;
                 }
+                int roomsLeftForThisBranch = remainingRooms - activeBranches; //calculatye how many rooms left for this branch
 
 
-                GameObject roomPrefab = FindRoomWithDoor(Opposite(dir));
-                SpawnRoom(newPosition, roomPrefab);
-                roomQueue.Enqueue(newPosition);
+                GameObject roomPrefab;
+                if (roomsLeftForThisBranch <=1) //if branch can only hold one more room then make it a dead end so no unused doors
+                {
+                    // last room - force a dead end (only the connecting door)
+                    roomPrefab = FindRoomWithOneDoor(Opposite(dir));
+                    Debug.Log($"Branch ending at {newPosition} - only {roomsLeftForThisBranch} rooms left for this branch");
+                    // if no ded end room exists, fall back to normal
+                    if (roomPrefab == null)
+                    {
+                        roomPrefab = FindRoomWithDoor(Opposite(dir));
+                    }
+                }
+                else
+                {
+                    roomPrefab = FindRoomWithDoor(Opposite(dir));
+                }
+                if (roomPrefab != null)
+                {
+                    SpawnRoom(newPosition, roomPrefab);
+                    roomQueue.Enqueue(newPosition);
+                }
+                else
+                {
+                    Debug.LogError($"No suitable room found for direction {Opposite(dir)}");
+                }
+
+
             }
             yield return new WaitForSeconds(spawnRoomDelay); //spawn next rooms after set delay (needed for bug testing)
         }
@@ -88,6 +120,27 @@ public class ChunkGeneration : MonoBehaviour
         return suitableRooms[Random.Range(0, suitableRooms.Count)];
     }
 
+    GameObject FindRoomWithOneDoor(Direction requiredDoorDirection)
+    {
+        List<GameObject> suitableRooms = new List<GameObject>();
+
+        foreach (GameObject room in roomPrefabs)
+        {
+            RoomController r = room.GetComponent<RoomController>();
+
+            //has to only have one door and the one required
+            if (r.availableDoors.Contains(requiredDoorDirection) && r.availableDoors.Count == 1)
+            {
+                suitableRooms.Add(room);
+            }
+        }
+
+        if (suitableRooms.Count > 0)
+            return suitableRooms[Random.Range(0, suitableRooms.Count)];
+
+        return null; //no ded room found
+    }
+
     Vector2Int DirectionToVector(Direction dir)
     {
         switch (dir) //switch case to convert the direction into a grid movement vector
@@ -111,5 +164,17 @@ public class ChunkGeneration : MonoBehaviour
             case Direction.Right: return Direction.Left;
         }
         return dir; 
+    }
+
+    void RandomiseList<T>(List<T> list)
+    {
+        //select random in list
+        for (int i = 0; i < list.Count; i++)
+        {
+            T temp = list[i];
+            int randomIndex = Random.Range(i, list.Count);
+            list[i] = list[randomIndex];
+            list[randomIndex] = temp;
+        }
     }
 }
