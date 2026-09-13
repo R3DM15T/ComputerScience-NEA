@@ -43,11 +43,13 @@ public class EnemyAI : MonoBehaviour
     public Transform player;
     public float distance;
     public List<Node> path;
+    public float gizmoRange = 30f;
 
     public Dictionary<Vector2Int, Node> grid = new Dictionary<Vector2Int, Node>();
 
     void Start()
     {
+        player = GameObject.Find("Player").transform;
         GenerateGrid();
         rigidBody = GetComponent<Rigidbody2D>();
 
@@ -62,8 +64,8 @@ public class EnemyAI : MonoBehaviour
 
     void GenerateGrid()
     {
-        int width = 50;
-        int height = 50;
+        int width = 200;
+        int height = 200;
 
         for (int x = -width; x < width; x++)
         {
@@ -348,6 +350,7 @@ public class EnemyAI : MonoBehaviour
         foreach (var node in grid.Values)
         {
             Vector3 worldPos = GridToWorld(node.gridPos);
+            if (Vector3.Distance(transform.position, worldPos) > gizmoRange) { continue; }
 
             if (node.isWalkable)
             {

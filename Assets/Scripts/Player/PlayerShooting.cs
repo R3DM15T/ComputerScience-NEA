@@ -11,7 +11,7 @@ public class PlayerShooting : MonoBehaviour
 
     private float shotCounter;
     private bool isFiring;
-    private Camera cam;
+    [SerializeField] Camera cam;
     void Start()
     {
         cam = Camera.main;
@@ -21,13 +21,7 @@ public class PlayerShooting : MonoBehaviour
     void FixedUpdate()
     {
         AimAtMouse();
-        isFiring = Mouse.current.leftButton.isPressed;
-        shotCounter -= Time.deltaTime;
 
-        if (isFiring && shotCounter <= 0f)
-        {
-            FireBullet();
-        }
     }
 
     void AimAtMouse()
@@ -53,23 +47,5 @@ public class PlayerShooting : MonoBehaviour
         gunPos.rotation = Quaternion.Euler(0, 0, angle);
     }
 
-    public void OnFire(InputAction.CallbackContext context)
-    {
-        if (context.started)
-        {
-            isFiring = true;
-            shotCounter = 0f;
-        }
-        else if (context.canceled)
-        {
-            isFiring = false;
-        }
-    }
 
-
-    void FireBullet()
-    {
-        Instantiate(bullet, firePoint.position, firePoint.rotation); //instantiating in the bullet in gun position
-        shotCounter = shotCooldown;
-    }
 }

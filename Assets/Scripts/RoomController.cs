@@ -5,6 +5,7 @@ public class RoomController : MonoBehaviour
 {
     public bool doorClose;
     public GameObject doors;
+    public GameObject enemyHolder;
     public GameObject roomMapLayout;
     public List<Direction> availableDoors;
     public List<GameObject> enemies = new List<GameObject>();
@@ -28,9 +29,11 @@ public class RoomController : MonoBehaviour
             CameraController.instance.ChangeTarget(transform);
             if (closeDoorOnWhenEntered)
             {
+                enemyHolder.SetActive(true);
                 doors.SetActive(true);
                 roomMapLayout.SetActive(true);
             }
+            roomMapLayout.SetActive(true);
 
         }
 

@@ -13,13 +13,16 @@ public class ChunkGeneration : MonoBehaviour
 {
     [SerializeField] GameObject[] roomPrefabs;
     [SerializeField] GameObject startRoomPrefab;
+    [SerializeField] GameObject shopRoomPrefab;
     [SerializeField] int spawnRoomDelay;
     [SerializeField] int numberOfRooms = 10;
     [SerializeField] float roomxSize = 20f;
     [SerializeField] float roomySize = 20f;
+    [SerializeField] float shopRoomChance = 0.25f;
 
     private Dictionary<Vector2Int, RoomController> placedRooms = new Dictionary<Vector2Int, RoomController>();
     private Queue<Vector2Int> roomQueue = new Queue<Vector2Int>();
+    private bool shopRoomSpawned = false;
     void Start()
     {
         SpawnStartRoom();
@@ -32,7 +35,7 @@ public class ChunkGeneration : MonoBehaviour
         SpawnRoom(startPosition, startRoomPrefab);
         roomQueue.Enqueue(startPosition); //Add the start position to the queue
 
-        Debug.Log($" The start room spawned at {startPosition}");
+        Debug.Log($" The start room has been spawned at {startPosition}");
         StartCoroutine(GenerateChunk());
 
 
@@ -44,6 +47,7 @@ public class ChunkGeneration : MonoBehaviour
         {
             Vector2Int currentPosition = roomQueue.Dequeue(); //get the next room position
             RoomController currentRoom = placedRooms[currentPosition];//get room at that set position
+
 
             int remainingRooms = numberOfRooms - placedRooms.Count;//find remaning amount of rooms to spawn in 
 
@@ -63,14 +67,21 @@ public class ChunkGeneration : MonoBehaviour
                 }
                 int roomsLeftForThisBranch = remainingRooms - activeBranches; //calculatye how many rooms left for this branch
 
+                bool isForcedDeadEnd = roomsLeftForThisBranch <= 1; 
+                bool isLastRoomOverall = placedRooms.Count == numberOfRooms - 1; 
 
                 GameObject roomPrefab;
-                if (roomsLeftForThisBranch <=1) //if branch can only hold one more room then make it a dead end so no unused doors
+                bool tryShopHere = !shopRoomSpawned && shopRoomPrefab != null && (isLastRoomOverall || (!isForcedDeadEnd && Random.value < shopRoomChance));
+
+                if (tryShopHere && HasMatchingDoor(shopRoomPrefab, Opposite(dir)))
                 {
-                    // last room - force a dead end (only the connecting door)
+                    roomPrefab = shopRoomPrefab;
+                    shopRoomSpawned = true;
+                    Debug.Log($"Spawning SHOP room at {newPosition}");
+                }
+                else if (isForcedDeadEnd) //if branch can only hold one more room then make it a dead end so no unused doors
+                {
                     roomPrefab = FindRoomWithOneDoor(Opposite(dir));
-                    Debug.Log($"Branch ending at {newPosition} - only {roomsLeftForThisBranch} rooms left for this branch");
-                    // if no ded end room exists, fall back to normal
                     if (roomPrefab == null)
                     {
                         roomPrefab = FindRoomWithDoor(Opposite(dir));
@@ -164,6 +175,12 @@ public class ChunkGeneration : MonoBehaviour
             case Direction.Right: return Direction.Left;
         }
         return dir; 
+    }
+
+    bool HasMatchingDoor(GameObject roomPrefab, Direction requiredDoorDirection) //checks if a specific prefab (like the shop) has the needed door
+    {
+        RoomController r = roomPrefab.GetComponent<RoomController>();
+        return r != null && r.availableDoors.Contains(requiredDoorDirection);
     }
 
     void RandomiseList<T>(List<T> list)

@@ -29,7 +29,6 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private LayerMask passThroughLayers = LayerMask.GetMask();
 
     [Header("References")]
-
     Vector2 moveInput;
     Rigidbody2D rigidBody;
     Animator animation;
@@ -37,6 +36,8 @@ public class PlayerMovement : MonoBehaviour
     CapsuleCollider2D bodyCollider;
     Renderer rend;
     BoxCollider2D feetCollider;
+    private bool paused = false;
+    private bool expandedMap = false;
 
     private void Awake()
     {
@@ -79,6 +80,42 @@ public class PlayerMovement : MonoBehaviour
         if (dashCoolCounter > 0)
         {
             dashCoolCounter -= Time.deltaTime;
+        }
+    }
+    public void OnPause(InputAction.CallbackContext context)
+    {
+        if (context.started)
+        {
+            if (!paused)
+            {
+                PauseMenu.instance.Pause();
+                paused = true;
+            }
+            else
+            {
+                PauseMenu.instance.Resume();
+                paused = false;
+            }
+            
+        }
+    }
+
+    public void OnMap(InputAction.CallbackContext context)
+    {
+        if (context.started)
+        {
+            if (!expandedMap)
+            {
+                CameraController.instance.TurnOnExpandedMap();
+                expandedMap = true;
+                Time.timeScale = 0f;
+            }
+            else
+            {
+                CameraController.instance.TurnOffExpandedMap();
+                expandedMap = false;
+                Time.timeScale = 1f;
+            }
         }
     }
 
@@ -164,6 +201,8 @@ public class PlayerMovement : MonoBehaviour
             Instantiate(bounceParticles, feet.transform.position, feet.transform.rotation);
         }
     }
+
+
 
 
     void PreventWallStick()

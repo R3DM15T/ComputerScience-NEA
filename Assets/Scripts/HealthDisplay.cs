@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 public class HealthDisplay : MonoBehaviour
 {
+    public static HealthDisplay instance;
     [Header("Heart Display Settings")]
     public GameObject heartPrefab;
     public Transform heartsContainer;
@@ -23,6 +24,11 @@ public class HealthDisplay : MonoBehaviour
 
     private List<Image> heartImages = new List<Image>();
     private HealthController healthController;
+
+    void Awake()
+    {
+        instance = this;
+    }
 
     void Start()
     {
@@ -53,7 +59,7 @@ public class HealthDisplay : MonoBehaviour
         }
     }
 
-    void CreateHeartDisplay()
+    public void CreateHeartDisplay()
     {
         if (healthController == null) return;
 

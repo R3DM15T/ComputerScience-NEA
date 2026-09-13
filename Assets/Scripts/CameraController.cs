@@ -1,10 +1,13 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class CameraController : MonoBehaviour
 {
     public static CameraController instance;
     public float moveSpeed = 1f;
     public Transform movePoint;
+    public GameObject miniMap;
+    public Camera mainCam, expandedMapCam;
 
     private void Awake()
     {
@@ -27,5 +30,20 @@ public class CameraController : MonoBehaviour
     public void ChangeTarget(Transform newTarget)
     {
         movePoint = newTarget;
+    }
+
+
+    public void TurnOnExpandedMap()
+    {
+        expandedMapCam.enabled = true;
+        mainCam.enabled = false;
+        miniMap.SetActive(false);
+    }
+
+    public void TurnOffExpandedMap()
+    {
+        expandedMapCam.enabled = false;
+        mainCam.enabled = true;
+        miniMap.SetActive(true);
     }
 }

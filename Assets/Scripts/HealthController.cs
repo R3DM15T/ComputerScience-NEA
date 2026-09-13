@@ -58,6 +58,14 @@ public class HealthController : MonoBehaviour
         OnHealthChanged?.Invoke();
     }
 
+    public void IncreaseMaxHealth(int amount)
+    {
+        maxHealth += amount;
+        currentHealth = maxHealth;
+        HealthDisplay.instance.CreateHeartDisplay();
+        OnHealthChanged?.Invoke();
+    }
+
     public void SetMaxHealth(int newMaxHealth)
     {
         maxHealth = newMaxHealth;
