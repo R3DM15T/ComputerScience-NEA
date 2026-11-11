@@ -20,8 +20,6 @@ public class CameraController : MonoBehaviour
     }
 
 
-
-
     public void Update()
     {
         transform.position = Vector3.MoveTowards(transform.position, new Vector3(movePoint.position.x + 1, movePoint.position.y + 1, -10), moveSpeed * Time.deltaTime);

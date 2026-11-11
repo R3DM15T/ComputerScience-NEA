@@ -5,20 +5,17 @@ using System.Collections.Generic;
 public class HealthDisplay : MonoBehaviour
 {
     public static HealthDisplay instance;
-    [Header("Heart Display Settings")]
     public GameObject heartPrefab;
     public Transform heartsContainer;
     public Sprite fullHeartSprite;
     public Sprite halfHeartSprite;
     public Sprite emptyHeartSprite;
 
-    [Header("Layout Settings")]
     public int heartsPerRow = 5;
     public float heartSpacing = 35f;
     public Vector2 heartSize = new Vector2(30f, 30f);
     public float heartScale = 1f;
 
-    [Header("Positioning Settings")]
     public bool alignLeft = true;
     public Vector2 startOffset = new Vector2(0f, 0f);
 
@@ -88,6 +85,7 @@ public class HealthDisplay : MonoBehaviour
                 heartObj = new GameObject($"Heart_{i}");
                 heartObj.transform.SetParent(heartsContainer);
                 heartObj.AddComponent<Image>();
+
             }
 
             Image heartImage = heartObj.GetComponent<Image>();
@@ -109,18 +107,12 @@ public class HealthDisplay : MonoBehaviour
                 rectTransform.anchorMax = new Vector2(0, 1);
                 rectTransform.pivot = new Vector2(0, 1);
 
-                rectTransform.anchoredPosition = new Vector2(
-                    col * (heartSize.x * heartScale + heartSpacing),
-                    -row * (heartSize.y * heartScale + heartSpacing)
-                );
+                rectTransform.anchoredPosition = new Vector2(col * (heartSize.x * heartScale + heartSpacing), -row * (heartSize.y * heartScale + heartSpacing));
             }
             else
             {
                 // original center positioning
-                rectTransform.anchoredPosition = new Vector2(
-                    col * (heartSize.x * heartScale + heartSpacing),
-                    -row * (heartSize.y * heartScale + heartSpacing)
-                );
+                rectTransform.anchoredPosition = new Vector2(col * (heartSize.x * heartScale + heartSpacing),-row * (heartSize.y * heartScale + heartSpacing));
             }
         }
     }

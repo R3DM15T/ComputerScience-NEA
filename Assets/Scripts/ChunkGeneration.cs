@@ -15,7 +15,7 @@ public class ChunkGeneration : MonoBehaviour
     [SerializeField] GameObject startRoomPrefab;
     [SerializeField] GameObject shopRoomPrefab;
     [SerializeField] int spawnRoomDelay;
-    [SerializeField] int numberOfRooms = 10;
+    [SerializeField] int numberofRooms = 10;
     [SerializeField] float roomxSize = 20f;
     [SerializeField] float roomySize = 20f;
     [SerializeField] float shopRoomChance = 0.25f;
@@ -34,8 +34,6 @@ public class ChunkGeneration : MonoBehaviour
         Vector2Int startPosition = Vector2Int.zero;
         SpawnRoom(startPosition, startRoomPrefab);
         roomQueue.Enqueue(startPosition); //Add the start position to the queue
-
-        Debug.Log($" The start room has been spawned at {startPosition}");
         StartCoroutine(GenerateChunk());
 
 
@@ -43,32 +41,34 @@ public class ChunkGeneration : MonoBehaviour
 
     private IEnumerator GenerateChunk()
     {
-        while (roomQueue.Count > 0 && placedRooms.Count < numberOfRooms) //while there is rooms to be processed and the max rooms has not been reached
+        while (roomQueue.Count > 0 && placedRooms.Count < numberofRooms) //while there is rooms to be processed and the max rooms has not been reached
         {
             Vector2Int currentPosition = roomQueue.Dequeue(); //get the next room position
             RoomController currentRoom = placedRooms[currentPosition];//get room at that set position
 
 
-            int remainingRooms = numberOfRooms - placedRooms.Count;//find remaning amount of rooms to spawn in 
+            int remainingRooms = numberofRooms - placedRooms.Count;//find remaning amount of rooms to spawn in 
 
             List<Direction> availableDirections = new List<Direction>(currentRoom.availableDoors);
             RandomiseList(availableDirections);
-            int activeBranches = roomQueue.Count;
+            int activeBranches = roomQueue.Count; //the amount of rooms that are sitting in the queue to be processed
 
             foreach (Direction dir in availableDirections) //loop through each door direction in the room
             {
                 Vector2Int newPosition = currentPosition + DirectionToVector(dir);
-                Debug.Log($"Spawning in room at {newPosition} with {currentRoom.availableDoors.Count} doors");
+                Debug.Log($"spawning in room at {newPosition} with {currentRoom.availableDoors.Count} doors");
 
                 if (placedRooms.ContainsKey(newPosition))//this is to skip if a room already exists at this position to prevent the rooms from overlapping
                 {
-                    Debug.Log($"Position {newPosition} already has a room, skipping room");
+                    Debug.Log($"the position {newPosition} already has a room in its place so skipping room");
                     continue;
                 }
+
                 int roomsLeftForThisBranch = remainingRooms - activeBranches; //calculatye how many rooms left for this branch
+                // number of rooms to be set to 25, if it has already placed 20 rooms and there would be 3 active branches left then 25 - 20 - 3 = 2, so 2 rooms left for this brnch to be able to spawn in
 
                 bool isForcedDeadEnd = roomsLeftForThisBranch <= 1; 
-                bool isLastRoomOverall = placedRooms.Count == numberOfRooms - 1; 
+                bool isLastRoomOverall = placedRooms.Count == numberofRooms - 1; 
 
                 GameObject roomPrefab;
                 bool tryShopHere = !shopRoomSpawned && shopRoomPrefab != null && (isLastRoomOverall || (!isForcedDeadEnd && Random.value < shopRoomChance));
@@ -77,7 +77,7 @@ public class ChunkGeneration : MonoBehaviour
                 {
                     roomPrefab = shopRoomPrefab;
                     shopRoomSpawned = true;
-                    Debug.Log($"Spawning SHOP room at {newPosition}");
+                    Debug.Log($"spawning the SHOP room at {newPosition}");
                 }
                 else if (isForcedDeadEnd) //if branch can only hold one more room then make it a dead end so no unused doors
                 {
@@ -98,7 +98,7 @@ public class ChunkGeneration : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogError($"No suitable room found for direction {Opposite(dir)}");
+                    Debug.LogError($"couldnt find a room with an opposite door facing {Opposite(dir)}");
                 }
 
 
@@ -111,9 +111,9 @@ public class ChunkGeneration : MonoBehaviour
     void SpawnRoom(Vector2Int gridPosition, GameObject prefab)
     {
         Vector3 gamePosition = new Vector3(gridPosition.x * roomxSize, gridPosition.y * roomySize, -2); //converting the grid position into the actual game position 
-        GameObject roomObject = Instantiate(prefab, gamePosition, Quaternion.identity); //Instantiating the room into the game scene
+        GameObject roomObject = Instantiate(prefab, gamePosition, Quaternion.identity); //instantiating the room into the game scene
         RoomController room = roomObject.GetComponent<RoomController>();
-        placedRooms.Add(gridPosition, room); // Storing the room in the dictionary with its grid position
+        placedRooms.Add(gridPosition, room); // storing the room in the dictionary with its grid position
     }
 
     GameObject FindRoomWithDoor(Direction requiredDoorDirection) //finding a room prefab that has a door direction that is needed
@@ -183,12 +183,12 @@ public class ChunkGeneration : MonoBehaviour
         return r != null && r.availableDoors.Contains(requiredDoorDirection);
     }
 
-    void RandomiseList<T>(List<T> list)
+    void RandomiseList<x>(List<x> list)
     {
         //select random in list
         for (int i = 0; i < list.Count; i++)
         {
-            T temp = list[i];
+            x temp = list[i];
             int randomIndex = Random.Range(i, list.Count);
             list[i] = list[randomIndex];
             list[randomIndex] = temp;

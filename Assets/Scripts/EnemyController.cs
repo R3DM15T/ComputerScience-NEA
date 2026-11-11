@@ -5,6 +5,7 @@ public class EnemyController : MonoBehaviour
     [SerializeField] float health = 5f;
     [SerializeField] GameObject enemyHurtEffect;
     [SerializeField] GameObject coin;
+ 
     void Start()
     {
         

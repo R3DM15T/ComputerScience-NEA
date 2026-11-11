@@ -1,5 +1,8 @@
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 using UnityEngine.InputSystem;
+using System.Linq;
 
 public class Shop : MonoBehaviour
 {
@@ -8,12 +11,22 @@ public class Shop : MonoBehaviour
     public bool isRestoreHealth, isWeaponSwap, isHealthUpgrade;
     public int itemPrice;
     public int healthUpgradeAmount = 1;
+    public TextMeshProUGUI info;
+    public SpriteRenderer gunsprite;
+    public GunManager[] gunList;
+    private GunManager gun;
 
     void Start()
     {
-        
-    }
+        if (isWeaponSwap)
+        {
+            gun = gunList[Random.Range(0, gunList.Length)];
+            info.text = "Buy " + gun.weaponName + "\n- " + gun.cost + " Coins -";
+            gunsprite.sprite = gun.sprite;
+            itemPrice = gun.cost;
+        }
 
+    }
 
     void FixedUpdate()
     {
@@ -53,7 +66,7 @@ public class Shop : MonoBehaviour
                     }
                     else if (isWeaponSwap)
                     {
-                        PlayerManager.instance.SwitchPlayerGun();
+                        PlayerManager.instance.SwitchPlayerGun(gunList.ToList().IndexOf(gun));
                     }
                     else if (isHealthUpgrade)
                     {

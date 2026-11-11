@@ -12,6 +12,8 @@ public class GunManager : MonoBehaviour
     [SerializeField] float shotCounter;
     private bool isFiring;
     public string weaponName;
+    public int cost;
+    public Sprite sprite;
     public Sprite weaponImageUI;
     
 

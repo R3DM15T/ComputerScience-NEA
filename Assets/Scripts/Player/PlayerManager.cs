@@ -17,7 +17,7 @@ public class PlayerManager : MonoBehaviour
     public List<GunManager> guns = new List<GunManager>();
     private int currentGunIndex = 0;
 
-    Renderer rend;
+    SpriteRenderer rend;
     BoxCollider2D feetCollider;
     private Camera cam;
 
@@ -28,7 +28,7 @@ public class PlayerManager : MonoBehaviour
     void Start()
     {
         cam = Camera.main;
-        rend = GetComponent<Renderer>();
+        rend = GetComponent<SpriteRenderer>();
         feetCollider = GetComponent<BoxCollider2D>();
         GunUI.instance.weaponImage.sprite = guns[currentGunIndex].weaponImageUI;
         GunUI.instance.weaponNameText.text = guns[currentGunIndex].weaponName;
@@ -54,7 +54,7 @@ public class PlayerManager : MonoBehaviour
                 {
                     currentGunIndex = 0;
                 }
-                SwitchPlayerGun();
+                SwitchPlayerGun(currentGunIndex);
             }
 
         }
@@ -101,9 +101,9 @@ public class PlayerManager : MonoBehaviour
 
     IEnumerator FlashRed()
     {
-        rend.material.color = damageColor;
+        rend.color = damageColor;
         yield return new WaitForSeconds(colorDelay);
-        rend.material.color = startColor;
+        rend.color = startColor;
     }
 
     public void turnTransparent()
@@ -113,13 +113,13 @@ public class PlayerManager : MonoBehaviour
 
     IEnumerator FlashTransparent()
     {
-        rend.material.color = transColor;
+        rend.color = transColor;
         yield return new WaitForSeconds(colorDelay);
-        rend.material.color = startColor;
+        rend.color = startColor;
     }
 
 
-    public void SwitchPlayerGun()
+    public void SwitchPlayerGun(int currentGunIndex)
     {
         foreach(GunManager gun in guns)
         {

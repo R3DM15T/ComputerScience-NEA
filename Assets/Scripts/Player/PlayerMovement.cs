@@ -126,11 +126,17 @@ public class PlayerMovement : MonoBehaviour
     bool IsGrounded()
     {
         float rayLength = 0.1f;
-        Vector2 rayOrigin = feetCollider.bounds.center;
+        Bounds bounds = feetCollider.bounds;
+
+        Vector2 centrerayOrigin = new Vector2(bounds.center.x, bounds.min.y);
+        Vector2 leftrayOrigin = new Vector2(bounds.min.x, bounds.min.y);
+        Vector2 rightrayOrigin = new Vector2(bounds.max.x, bounds.min.y);
         Vector2 rayDirection = Vector2.down;
 
-        RaycastHit2D hit = Physics2D.Raycast(rayOrigin, rayDirection, rayLength, LayerMask.GetMask("Platforms"));
-        return hit.collider != null;
+        RaycastHit2D centreHit = Physics2D.Raycast(centrerayOrigin, rayDirection, rayLength, LayerMask.GetMask("Platforms"));
+        RaycastHit2D leftHit = Physics2D.Raycast(leftrayOrigin, rayDirection, rayLength, LayerMask.GetMask("Platforms"));
+        RaycastHit2D rightHit = Physics2D.Raycast(rightrayOrigin, rayDirection, rayLength, LayerMask.GetMask("Platforms"));
+        return centreHit.collider != null || leftHit.collider != null || rightHit.collider != null;
     }
 
     public void OnJump(InputAction.CallbackContext context)

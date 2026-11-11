@@ -36,7 +36,7 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] float patrolDelay = 0.5f;
     private bool WaitingForPatrol = false;
 
-    private Vector3 lastPosition; 
+    private Vector3 lastPosition;
     Rigidbody2D rigidBody;
     public EnemyStates currentState;
     public EnemyTypes enemyType;
@@ -58,7 +58,7 @@ public class EnemyAI : MonoBehaviour
     void FixedUpdate()
     {
         distance = Vector2.Distance(transform.position, player.position);
-        FiniteStates();
+        FiniteStateMachine();
         FlipSprite();
     }
 
@@ -95,7 +95,7 @@ public class EnemyAI : MonoBehaviour
 
 
 
-    void FiniteStates()
+    void FiniteStateMachine()
     {
         switch (currentState) //switch case statement for the different enemy states
         {
@@ -105,7 +105,7 @@ public class EnemyAI : MonoBehaviour
                     currentState = EnemyStates.Follow; //enemy follows player if distance is more than the attack range
                 break;
             case EnemyStates.Follow:
-                FollowPlayer(); //uses A* pathfinding to follow player
+                FollowPlayer(); //uses the A* pathfinding to follow player
                 if (distance < attackRange)
                     currentState = EnemyStates.Attack;//enemy attacks player if the distance is less than attack range
                 else if (distance > detectRange)
@@ -147,19 +147,18 @@ public class EnemyAI : MonoBehaviour
         if (!hasTarget)
         {
             List<Node> neighbours = GetNeighbours(grid[currentNode]);
-
-            List<Node> validNodes = new List<Node>();
+            List<Node> validpatrolnodes = new List<Node>();
 
             foreach (Node node in neighbours)
             {
                 if (node.isWalkable)
-                    validNodes.Add(node);
+                    validpatrolnodes.Add(node);
             }
 
-            if (validNodes.Count > 0)
+            if (validpatrolnodes.Count > 0)
             {
-                int random = UnityEngine.Random.Range(0, validNodes.Count);
-                currentTargetNode = validNodes[random].gridPos;
+                int random = UnityEngine.Random.Range(0, validpatrolnodes.Count);
+                currentTargetNode = validpatrolnodes[random].gridPos;
                 hasTarget = true;
             }
         }
@@ -167,18 +166,14 @@ public class EnemyAI : MonoBehaviour
         // moving to the target node
         Vector3 targetPos = GridToWorld(currentTargetNode);
 
-        transform.position = Vector2.MoveTowards(
-            transform.position,
-            targetPos,
-            speed * Time.deltaTime
-        );
+        transform.position = Vector2.MoveTowards(transform.position, targetPos, speed * Time.deltaTime);
 
         //reached the target, picking a new one
         if (Vector2.Distance(transform.position, targetPos) < 0.1f)
         {
             hasTarget = false;
         }
-        
+
 
     }
 
@@ -188,6 +183,7 @@ public class EnemyAI : MonoBehaviour
     {
         Vector2Int start = WorldToGrid(transform.position);
         Vector2Int end = WorldToGrid(player.position);
+
         path = PathFind(start, end);
 
         if (path != null && path.Count > 1)
@@ -232,12 +228,10 @@ public class EnemyAI : MonoBehaviour
 
             foreach (Node neighbour in GetNeighbours(currentNode)) //checks all neighbouring nodes
             {
-
                 if (!neighbour.isWalkable || closeSet.Contains(neighbour))
                     continue;
 
                 int newCost = currentNode.gCost + GetDistance(currentNode, neighbour);
-
 
                 if (newCost < neighbour.gCost || !openSet.Contains(neighbour))
                 {
@@ -246,7 +240,9 @@ public class EnemyAI : MonoBehaviour
                     neighbour.parent = currentNode;
 
                     if (!openSet.Contains(neighbour))
+                    {
                         openSet.Add(neighbour);
+                    }  
                 }
             }
 
@@ -364,7 +360,7 @@ public class EnemyAI : MonoBehaviour
             Gizmos.DrawCube(worldPos, Vector3.one * 0.3f);
         }
 
-        foreach(Node node in path)
+        foreach (Node node in path)
         {
             Vector3 worldPos = GridToWorld(node.gridPos);
             Gizmos.color = Color.green; //path
@@ -390,6 +386,6 @@ public class Node
     {
         gridPos = pos;
         isWalkable = walkable;
-        gCost = int.MaxValue; 
+        gCost = int.MaxValue;
     }
 }
